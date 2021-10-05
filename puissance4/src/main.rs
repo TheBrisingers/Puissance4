@@ -1,77 +1,86 @@
-extern crate glutin_window;
-extern crate graphics;
-extern crate opengl_graphics;
-extern crate piston;
+extern crate piston_window;
+extern crate image as im;
+extern crate vecmath;
 
-use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{GlGraphics, OpenGL};
-use piston::event_loop::{EventSettings, Events};
-use piston::input::{RenderArgs, RenderEvent, UpdateArgs, UpdateEvent};
-use piston::window::WindowSettings;
+use piston_window::*;
 
-pub struct App {
-    gl: GlGraphics, // OpenGL drawing backend.
-    rotation: f64,  // Rotation for the square.
-}
 
-impl App {
-    fn render(&mut self, args: &RenderArgs) {
-        use graphics::*;
-
-        const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-        const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-
-        let square = rectangle::square(0.0, 0.0, 50.0);
-        let rotation = self.rotation;
-        let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
-
-        self.gl.draw(args.viewport(), |c, gl| {
-            // Clear the screen.
-            clear(GREEN, gl);
-
-            let transform = c
-                .transform
-                .trans(x, y)
-                .rot_rad(rotation)
-                .trans(-25.0, -25.0);
-
-            // Draw a box rotating around the middle of the screen.
-            rectangle(RED, square, transform, gl);
-        });
-    }
-
-    fn update(&mut self, args: &UpdateArgs) {
-        // Rotate 2 radians per second.
-        self.rotation += 2.0 * args.dt;
-    }
-}
 
 fn main() {
-    // Change this to OpenGL::V2_1 if not working.
     let opengl = OpenGL::V3_2;
-
-    // Create an Glutin window.
-    let mut window: Window = WindowSettings::new("spinning-square", [200, 200])
-        .graphics_api(opengl)
+    let (width, height) = (1000, 800);
+    let mut window: PistonWindow = WindowSettings::new("shapes", (width, height))
         .exit_on_esc(true)
+        .graphics_api(opengl)
         .build()
         .unwrap();
+    window.set_lazy(true);
 
-    // Create a new game and run it.
-    let mut app = App {
-        gl: GlGraphics::new(opengl),
-        rotation: 0.0,
-    };
+    let taille_case = 100.0;
+    const nb_colonne :i64 = 7;
+    const nb_ligne :i64 = 6;
+    let marge_x = 20.0;
+    let marge_y = 120.0;
+    let blue = [0.0, 0.0, 1.0, 1.0];
+    let taille_grille = math::margin_rectangle([marge_x, marge_y, taille_case*nb_colonne as f64, taille_case*nb_ligne as f64], 0.0);
+    let mut cursor_colonne = 0;
 
-    let mut events = Events::new(EventSettings::new());
-    while let Some(e) = events.next(&mut window) {
-        if let Some(args) = e.render_args() {
-            app.render(&args);
+    #[derive(Copy,Clone)]
+    enum Jeton {
+        NONE =0,
+        YELLOW,
+        RED
+    }
+
+
+    let mut grid = [[Jeton::NONE;nb_ligne as usize];nb_colonne as usize];
+
+
+
+    while let Some(e) = window.next() {
+        if let Some(pos) = e.mouse_cursor_args() {
+            cursor_colonne = ((pos[0] as f64-marge_x)/taille_case) as i64;
+            if cursor_colonne>=nb_colonne {
+                cursor_colonne =nb_colonne-1;
+            }
         }
+        if let Some(button) = e.press_args() {
+            if button == Button::Mouse(MouseButton::Left) {
+                let mut count = nb_ligne-1 as i64;
+                while count>=0{
+                    match grid[cursor_colonne as usize][count as usize] {
+                        Jeton::NONE => {grid[cursor_colonne as usize][count as usize] = Jeton::YELLOW;
+                            break;}
+                        Jeton::YELLOW | Jeton::RED => {count-=1}
+                    }
+                }                
+            }
+        };
+        window.draw_2d(&e, |c, g, _| {
+            clear([1.0; 4], g);
+        
+            let taille_jeton= [marge_x + taille_case /10.0 + taille_case * cursor_colonne as f64, taille_case /10.0, taille_case * 8.0/10.0, taille_case * 8.0/10.0];
+            //let red = [1.0, 0.0, 0.0, 1.0];
+            let yellow = [1.0, 0.8, 0.0, 1.0];
+            ellipse(yellow, taille_jeton, c.transform, g);
+            
+            rectangle(blue, taille_grille, c.transform, g);
 
-        if let Some(args) = e.update_args() {
-            app.update(&args);
-        }
+            for (i,col) in grid.iter().enumerate() {       
+                let c = c.trans(0.0, 0.0);
+                for (j,cell) in col.iter().enumerate() {
+                    let taille_trou = [marge_x + taille_case /10.0 + taille_case * i as f64, marge_y + taille_case /10.0 + taille_case * j as f64, taille_case * 8.0/10.0, taille_case * 8.0/10.0];
+                    let mut color_jeton = [1.0, 1.0, 1.0, 1.0];
+                    match cell {
+                        Jeton::NONE => {},
+                        Jeton::YELLOW => {color_jeton = [1.0, 0.8, 0.0, 1.0];},
+                        Jeton::RED => {color_jeton = [1.0, 0.0, 0.0, 1.0];}
+                    }
+                    ellipse(color_jeton, taille_trou, c.transform, g);
+ 
+                }
+            }
+
+        });
     }
 }
-
