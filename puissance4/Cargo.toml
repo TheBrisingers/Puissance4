@@ -7,3 +7,6 @@ edition = "2018"
 
 [dependencies]
 ggez = "0.5.1"
+piston_window = "0.120.0"
+image = "0.23.0"
+vecmath = "1.0.0"
