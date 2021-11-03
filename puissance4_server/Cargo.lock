@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "hello_network_server"
+name = "puissance4_server"
 version = "0.1.0"
