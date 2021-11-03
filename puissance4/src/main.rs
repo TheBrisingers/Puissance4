@@ -1,7 +1,7 @@
 extern crate piston_window;
 extern crate image as im;
 extern crate vecmath;
-use std::io::{Write,Read,stdin,stdout};
+use std::io::{Write,Read};
 use std::net::TcpStream;
 use piston_window::*;
 
@@ -89,6 +89,9 @@ fn main() {
                 cursor_column = ((pos[0] as f64-margin_x)/size_tile) as i64;
                 if cursor_column>=NB_COLUMN {
                     cursor_column =NB_COLUMN-1;
+                }
+                if cursor_column<0 {
+                    cursor_column =0;
                 }
             }
             if let Some(button) = e.press_args() {
