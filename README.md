@@ -13,9 +13,11 @@ n'a réalisé un tel alignement, la partie est déclarée nulle.” (Wikipédia)
 
 ### Démarrer une nouvelle partie 
 
+Pour démarrer il faut faire un cargo run dans le dossier puissance4_server et deux fois cargo run dans le dossier puissance4_client pour avoir 2 clients qui se connectent.
+
 Une partie nécessite la mise en place d’une grille de jeu de 7 colonnes par 6 lignes générée sur la partie serveur.
 Et de deux clients connectés, qui représentent les joueurs. 
-Les utilisateurs doivent pouvoir choisir la colonne de leur choix à chaque avec A Z E R T Y. 
+Les utilisateurs doivent pouvoir choisir la colonne de leur choix à chaque avec A Z E R T Y U. 
 
 Nous représentons la partie comme une succession de coups, qui pourrons être effectués 
 tantôt par un joueur (client 1), tantôt par l’autre(client 2). Etant donné que lorsqu’un joueur 

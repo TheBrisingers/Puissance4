@@ -1,3 +1,17 @@
+/**
+ * @file main.rs
+ *
+ * @brief This class has for purpose to be the client of the game
+ *
+ * @date 9th November 2021
+ *
+ * @authors Timothée Jouffrieau Jordy Laurent
+ *
+ * @version 1.0
+ *
+ * @copyright CCBY 4.0
+ */
+
 use std::net::TcpStream;
 use std::io::{Write,Read,stdin,stdout};
 
@@ -8,6 +22,9 @@ fn get_entry() -> String {
 	buf.replace("\n","").replace("\r","")
 }
 
+/**
+ * Échange avec le serveur
+ */
 fn exchange_with_server(mut stream: TcpStream) {
 	let stdout = std::io::stdout();
 	let mut io = stdout.lock();

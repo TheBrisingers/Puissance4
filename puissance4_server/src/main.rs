@@ -1,9 +1,36 @@
+/**
+ * @file main.rs
+ *
+ * @brief This class has for purpose to be the server of the game
+ *
+ * @date 9th November 2021
+ *
+ * @authors Timothée Jouffrieau Jordy Laurent
+ *
+ * @version 1.0
+ *
+ * @copyright CCBY 4.0
+ */
+
 use std::net::{Shutdown,TcpListener, TcpStream};
 use std::io::{Read};
 use std::thread;
 use std::sync::mpsc;
+use std::process;
 
+/*-----------------------------------------------Variables-------------------------------------------------------*/
+/**
+ * @var NB_COLUMN
+ *
+ * @brief Nombre de colonnes
+ */
 const NB_COLUMN :i64 = 7;
+
+/**
+ * @var NB_RAW
+ *
+ * @brief Nombre de rangées
+ */
 const NB_RAW :i64 = 6;
 
 #[derive(Copy,Clone)]
@@ -13,10 +40,13 @@ const NB_RAW :i64 = 6;
         RED
     }
 
+/*-----------------------------------------------Functions-------------------------------------------------------*/
 
+/**
+ * Écoute en permanence le client
+ */
 fn handle_client(mut stream: TcpStream,adresse: &str, tx: mpsc::Sender::<u8>) {
     let mut msg: u8 = 'j' as u8;
-    //println!("connecter + message envoyé");
     loop {
         let buf = &mut [0; 10];
 
@@ -24,19 +54,16 @@ fn handle_client(mut stream: TcpStream,adresse: &str, tx: mpsc::Sender::<u8>) {
             Ok(received) => {
                 if received < 1 {
                     println!("Client disconnected {}",adresse);
-                    return;
+                    println!("Partie terminée !");
+                    process::exit(1);
                 }
-
                 let mut x = 0;
-
                 for c in buf {
                     if x>=received {
                         break;
                     }
                     x += 1;
                     if *c == '\n' as u8 {
-                        //println!("message reçu {} : {}", adresse, String::from_utf8(msg).unwrap());
-                        //stream.write(b"ok\n");
                         tx.send(msg);
                     } else {
                         msg = *c;
@@ -45,15 +72,14 @@ fn handle_client(mut stream: TcpStream,adresse: &str, tx: mpsc::Sender::<u8>) {
             }
             Err(_) => {
                 println!("Client disconnected {}", adresse);
-                return;
+                println!("Partie terminée !");
+                process::exit(1);
             }
         }
     }
 }
 
 fn main() {
-
-    
 
     let listener =  TcpListener::bind("127.0.0.1:1234").unwrap();
     let mut count = 0;
@@ -155,6 +181,9 @@ fn main() {
     }    
 }
 
+/**
+ * Montre la grille 
+ */
 fn show_grille(grid: &[[Token;NB_RAW as usize];NB_COLUMN as usize]) {
     let mut msg = String::from("A Z E R T Y U\n");
     for raw in 0..NB_RAW {
@@ -174,8 +203,9 @@ fn show_grille(grid: &[[Token;NB_RAW as usize];NB_COLUMN as usize]) {
     // }
 }
 
-
-
+/**
+ * Ajoute un jeton dans la grille
+ */
 fn add_token( mut grid:[[Token;NB_RAW as usize];NB_COLUMN as usize], column: i64, current_player: Token) -> 
         [[Token;NB_RAW as usize];NB_COLUMN as usize] {
             let mut count = NB_RAW-1 as i64;
@@ -189,6 +219,10 @@ fn add_token( mut grid:[[Token;NB_RAW as usize];NB_COLUMN as usize], column: i64
             return grid;
         }
         
+
+/**
+ * Vérifie si il y a un gagnant 
+ */
 fn check_winner(grid:[[Token;NB_RAW as usize];NB_COLUMN as usize]) ->Token{
 
         //verif columns
